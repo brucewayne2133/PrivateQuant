@@ -1,0 +1,36 @@
+# Python virtual envs
+.venv/
+venv/
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Build/test/cache
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Data and results (keep repo lean)
+data/
+results/
+
+# Logs
+*.log
+
+# Local env/config secrets
+.env
+.env.*
+
+# Node junk if ever added
+node_modules/

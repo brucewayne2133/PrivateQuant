@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quant Terminal</title>
+  <link rel="stylesheet" href="/frontend/style.css" />
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <h2>Terminal Controls</h2>
+      <div class="control-section">
+        <div class="control-head">
+          <div>
+            <div class="control-kicker">Strategy Setup</div>
+            <div class="control-title">Choose your edge</div>
+          </div>
+          <div id="strategyCountBadge" class="count-badge">0 selected</div>
+        </div>
+        <label>Primary Strategy</label>
+        <select id="strategy"><option value="basic_trend">basic_trend</option></select>
+        <label>Batch Strategy Selection</label>
+        <div class="strategy-toolbar">
+          <input id="strategySearch" type="text" placeholder="Search strategies" />
+          <div class="strategy-bulk-actions">
+            <button id="selectAllStrategiesBtn" type="button" class="mini-btn">All</button>
+            <button id="clearStrategiesBtn" type="button" class="mini-btn">Clear</button>
+          </div>
+        </div>
+        <div id="strategyChecklist" class="strategy-checklist modern-strategy-list"></div>
+      </div>
+      <label>Asset</label>
+      <select id="symbol"></select>
+      <label>Timeframe</label>
+      <select id="timeframe">
+        <option value="1m">1m</option>
+        <option value="5m">5m</option>
+        <option value="10m">10m</option>
+        <option value="15m">15m</option>
+        <option value="30m">30m</option>
+        <option value="1h">1h</option>
+      </select>
+      <label>Starting Capital</label>
+      <input id="startingCash" type="number" value="100000" step="1000" min="1000" />
+      <label>Speed</label>
+      <select id="speedSelect">
+        <option value="slow">slow</option>
+        <option value="normal" selected>normal</option>
+        <option value="fast">fast</option>
+      </select>
+      <label>Max Trades</label>
+      <input id="maxTrades" type="number" value="0" min="0" step="1" />
+      <div class="button-grid">
+        <button id="startBtn">Start</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="continueBtn">Continue</button>
+        <button id="resetBtn">Reset</button>
+      </div>
+      <div class="button-stack">
+        <button id="runAllBtn">Run Selected Strategies</button>
+        <button id="exportCsvBtn">Export CSV</button>
+      </div>
+      <div class="status-card">
+        <div><b>State:</b> <span id="stateText">idle</span></div>
+        <div><b>Bar:</b> <span id="barText">0 / 0</span></div>
+        <div><b>Price:</b> <span id="priceText">—</span></div>
+        <div><b>PnL:</b> <span id="pnlText">—</span></div>
+        <div><b>Trades:</b> <span id="tradesProgressText">0 / 0</span></div>
+        <div class="progress-shell"><div id="tradesProgressBar" class="progress-bar"></div></div>
+      </div>
+      <div class="status-card data-status-card">
+        <div class="section-title">Data Status</div>
+        <div><b>Last Refresh:</b> <span id="dataRefreshText">—</span></div>
+        <div id="dataStatusPanel" class="data-status-panel"></div>
+      </div>
+      <div class="status-card chart-style-card">
+        <div class="section-title">Chart Settings</div>
+
+        <div class="settings-group">
+          <div class="settings-heading">Appearance</div>
+          <label>Theme</label>
+          <select id="themePreset">
+            <option value="dark" selected>dark</option>
+            <option value="light">light</option>
+          </select>
+          <label>Bull Body</label>
+          <input id="bullColor" type="color" value="#26a69a" />
+          <label>Bear Body</label>
+          <input id="bearColor" type="color" value="#ef5350" />
+          <label>Wick</label>
+          <input id="wickColor" type="color" value="#94a3b8" />
+          <label>Border</label>
+          <input id="borderColor" type="color" value="#94a3b8" />
+          <label>Background</label>
+          <input id="bgColor" type="color" value="#0a0a0a" />
+          <label>Grid</label>
+          <input id="gridColor" type="color" value="#20262e" />
+        </div>
+
+        <div class="settings-group">
+          <div class="settings-heading">Scale</div>
+          <label>Scale Mode</label>
+          <select id="scaleMode">
+            <option value="linear" selected>linear</option>
+            <option value="log">log</option>
+          </select>
+          <label class="toggle-row"><input id="autoFitToggle" type="checkbox" checked /> <span>Auto-fit scale</span></label>
+        </div>
+
+        <div class="settings-group">
+          <div class="settings-heading">Chart</div>
+          <label class="toggle-row"><input id="showGridToggle" type="checkbox" /> <span>Show grid</span></label>
+          <label class="toggle-row"><input id="preserveZoomToggle" type="checkbox" checked /> <span>Preserve manual zoom</span></label>
+          <label class="toggle-row"><input id="liveFollowToggle" type="checkbox" checked /> <span>Live follow mode</span></label>
+          <label class="toggle-row"><input id="fitTradesToggle" type="checkbox" checked /> <span>Auto-fit entries & exits</span></label>
+        </div>
+      </div>
+    </aside>
+    <main class="main">
+      <div class="hero-row">
+        <div class="hero-copy">
+          <div class="hero-kicker">Quant Dashboard</div>
+          <div class="hero-title">Backtest Control Center</div>
+          <div class="hero-sub" id="heroMeta">BTCUSDT • 1m • normal</div>
+        </div>
+        <div class="performance-card performance-card-xl">
+          <div class="performance-header">
+            <div>
+              <div class="section-title">Performance Cycle</div>
+              <div class="performance-sub">Live equity momentum and backtest quality</div>
+            </div>
+            <div id="performanceStateBadge" class="performance-state-badge">Idle</div>
+          </div>
+          <div class="performance-body">
+            <div class="performance-ring-wrap performance-ring-wrap-xl">
+              <svg class="performance-ring performance-ring-xl" viewBox="0 0 160 160">
+                <circle class="ring-bg" cx="80" cy="80" r="64"></circle>
+                <circle id="ringProgress" class="ring-progress" cx="80" cy="80" r="64"></circle>
+              </svg>
+              <div class="ring-center">
+                <div id="ringPercent" class="ring-percent">0.00%</div>
+                <div id="ringProfit" class="ring-profit">0.00</div>
+              </div>
+            </div>
+            <div class="performance-side-metrics">
+              <div class="mini-metric-card">
+                <span>Equity Peak</span>
+                <strong id="heroEquityPeak">0.00</strong>
+              </div>
+              <div class="mini-metric-card">
+                <span>Drawdown</span>
+                <strong id="heroDrawdown">0.00%</strong>
+              </div>
+              <div class="mini-metric-card">
+                <span>Sharpe-like</span>
+                <strong id="heroSharpeLike">0.00</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="statusRibbon" class="status-ribbon status-stop">Idle</div>
+      <div class="kpis">
+        <div class="terminal-card"><div class="kpi-label">Current PnL</div><div class="kpi-value" id="kpiPnl">—</div><div class="kpi-sub">Live updating</div></div>
+        <div class="terminal-card"><div class="kpi-label">Equity</div><div class="kpi-value" id="kpiEquity">—</div><div class="kpi-sub">Current equity</div></div>
+        <div class="terminal-card"><div class="kpi-label">Price</div><div class="kpi-value" id="kpiPrice">—</div><div class="kpi-sub">Latest candle close</div></div>
+        <div class="terminal-card"><div class="kpi-label">Position</div><div class="kpi-value" id="kpiPosition">FLAT</div><div class="kpi-sub">Current position</div></div>
+      </div>
+      <div class="stats-grid">
+        <div class="terminal-card stats-panel">
+          <div class="section-title">Performance Stats</div>
+          <div class="stats-list metrics-extended">
+            <div class="stat-row"><span>Total Trades</span><strong id="statTotalTrades">0</strong></div>
+            <div class="stat-row"><span>Win Rate</span><strong id="statWinrate">0.00%</strong></div>
+            <div class="stat-row"><span>Total PnL</span><strong id="statTotalPnl">0.00</strong></div>
+            <div class="stat-row"><span>Average Win</span><strong id="statAvgWin">0.00</strong></div>
+            <div class="stat-row"><span>Average Loss</span><strong id="statAvgLoss">0.00</strong></div>
+            <div class="stat-row"><span>Equity Peak</span><strong id="statEquityPeak">0.00</strong></div>
+            <div class="stat-row"><span>Max Drawdown</span><strong id="statMaxDrawdown">0.00%</strong></div>
+            <div class="stat-row"><span>Sharpe-like</span><strong id="statSharpeLike">0.00</strong></div>
+          </div>
+        </div>
+        <div class="terminal-card comparison-panel">
+          <div class="section-title">Run Comparison</div>
+          <div class="comparison-head comparison-row comparison-row-wide">
+            <div>Strategy</div>
+            <div>Score</div>
+            <div>PnL</div>
+            <div>Win Rate</div>
+            <div>Drawdown</div>
+            <div>Trades</div>
+          </div>
+          <div id="runComparison" class="comparison-table"></div>
+        </div>
+      </div>
+      <div class="stack-grid">
+        <div id="priceChart" class="chart"></div>
+        <div id="equityChart" class="chart"></div>
+      </div>
+      <div class="bottom-grid">
+        <div class="terminal-card"><div class="section-title">Execution Monitor</div><div id="monitorBox"></div></div>
+        <div class="terminal-card">
+          <div class="trade-feed-header">
+            <div class="section-title">Live Trade Feed</div>
+            <div class="trade-sort-controls">
+              <button id="sortTimeBtn" class="sort-btn">Sort Time</button>
+              <button id="sortPnlBtn" class="sort-btn">Sort PnL</button>
+              <button id="clearRunsBtn" class="sort-btn">Clear Runs</button>
+            </div>
+          </div>
+          <div class="trade-feed-columns">
+            <div>Time</div>
+            <div>Side</div>
+            <div>PnL</div>
+          </div>
+          <div id="tradeFeed" class="trade-feed"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="/frontend/app.js"></script>
+</body>
+</html>
